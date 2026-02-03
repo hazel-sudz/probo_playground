@@ -102,12 +102,12 @@ class Environment:
         """
 
         # check map boundary
-        if not self.DIMENSIONS.within_bounds(position):
+        if not self.DIMENSIONS.within_bounds(position.pos):
             return False
 
         # check obstacles
         for bound in self.OBSTACLES:
-            if not bound.within_bounds(position):
+            if not bound.within_bounds(position.pos):
                 return False
 
         return True 

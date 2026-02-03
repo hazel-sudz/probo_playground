@@ -2,59 +2,110 @@
 Main file for running the simulator.
 """
 
+import csv
+import json
+import os
+import sys
+
+import pandas as pd
+
 from environment import Environment
 from robot import Robot
+from sensors import WheelEncoder, LandmarkPinger
 from utils import Position, Pose, Landmark, Bounds
 
-if __name__ == "__main__":
-    # set up the environment
-    # TODO: choose values for each input parameter, using the expected datatype
-    dimensions = None
-    dt = None
+
+def run_scenario(scenario_name):
+    """
+    Run a simulation scenario by loading config and velocity commands from
+    input/{scenario_name}/, executing the sim loop, and returning results.
+
+    Args:
+        scenario_name: name of the scenario folder under input/
+
+    Returns:
+        (ground_truth_df, sensor_data_df): concatenated DataFrames of all
+        ground truth snapshots and sensor measurements.
+    """
+    base_dir = os.path.join(os.path.dirname(__file__), "..", "input", scenario_name)
+
+    # Load config
+    with open(os.path.join(base_dir, "config.json"), "r") as f:
+        config = json.load(f)
+
+    dims = config["dimensions"]
+    dimensions = Bounds(dims["x_min"], dims["x_max"], dims["y_min"], dims["y_max"])
+    dt = config["dt"]
+    total_seconds = config["total_seconds"]
+
     obstacles = []
+    for obs in config["obstacles"]:
+        obstacles.append(Bounds(obs["x_min"], obs["x_max"], obs["y_min"], obs["y_max"]))
+
     landmarks = []
-    initial_robot_pose = None
+    for lm in config["landmarks"]:
+        landmarks.append(Landmark(pos=Position(lm["x"], lm["y"]), id=lm["id"]))
 
-    env = Environment(
-        dimensions,
-        dt,
-        obstacles,
-        landmarks,
-        initial_robot_pose,
-    )
+    rp = config["initial_robot_pose"]
+    initial_robot_pose = Pose(pos=Position(rp["x"], rp["y"]), theta=rp["theta"])
 
-    # set up the robot
+    # Create environment and robot
+    env = Environment(dimensions, dt, obstacles, landmarks, initial_robot_pose)
     robot = Robot(env)
 
-    # set up timekeeping
-    # TODO: set the total_seconds variable to however long you want the simulator to run (not real-time!)
-    total_seconds = None
-    total_timesteps = total_seconds / env.DT
+    # Attach sensors
+    encoder = WheelEncoder(robot)
+    pinger = LandmarkPinger(robot)
+    robot.sensors.append(encoder)
+    robot.sensors.append(pinger)
 
-    # set up logging
+    # Load velocity commands
+    vel_commands = []
+    with open(os.path.join(base_dir, "vel_cmd.csv"), "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            vel_commands.append({
+                "timestamp": float(row["timestamp"]),
+                "linear_vel": float(row["linear_vel"]),
+                "angular_vel": float(row["angular_vel"]),
+            })
+
+    # Sim loop
+    total_timesteps = int(total_seconds / env.DT)
     ground_truth_history = []
     sensor_data_history = []
 
-    # set up input filepath and output filepaths
-    input_commands_filepath = ""
-    output_ground_truth_filepath = ""
-    output_sensor_data_filepath = ""
+    cmd_index = 0
+    current_lin_vel = 0.0
+    current_ang_vel = 0.0
 
-    # open up the instructions, pop the first
-    with open(input_commands_filepath, "r") as cmd:
-        # iterate through each timestep
-        for step in range(int(total_timesteps) + 1):
-            # TODO: take a ground truth snapshot and add it to the history
+    for step in range(total_timesteps + 1):
+        # Snapshot ground truth
+        ground_truth_history.append(env.take_state_snapshot())
 
-            # TODO: take sensor measurements and add it to the history
+        # Take sensor measurements
+        sensor_data_history.append(robot.take_sensor_measurements())
 
-            # TODO: retrieve the next motor command from the input file
+        # Check if a new command should be applied at this timestamp
+        while cmd_index < len(vel_commands) and vel_commands[cmd_index]["timestamp"] <= env.time:
+            current_lin_vel = vel_commands[cmd_index]["linear_vel"]
+            current_ang_vel = vel_commands[cmd_index]["angular_vel"]
+            cmd_index += 1
 
-            # TODO: execute the motor command
+        # Execute motor command
+        robot.robot_step_differential(current_lin_vel, current_ang_vel)
 
-    # at the end, write the histories into output files
-    with open(output_ground_truth_filepath, "w") as gt_data:
-        # TODO: write ground_truth_history to a file
+        # Advance time
+        env.time += env.DT
 
-    with open(output_sensor_data_filepath, "w") as sensor_data:
-        # TODO: write sensor_data_history to a file
+    ground_truth_df = pd.concat(ground_truth_history, ignore_index=True)
+    sensor_data_df = pd.concat(sensor_data_history, ignore_index=True)
+
+    return ground_truth_df, sensor_data_df
+
+
+if __name__ == "__main__":
+    scenario = sys.argv[1]
+    gt_df, sensor_df = run_scenario(scenario)
+    print("Ground truth shape:", gt_df.shape)
+    print("Sensor data shape:", sensor_df.shape)

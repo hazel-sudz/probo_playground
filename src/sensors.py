@@ -12,8 +12,7 @@ from abc import ABC, abstractmethod
 from math import pi
 import random, math
 
-from src.robot import Robot
-from src.utils import BearingRange, Pose, Velocities
+from utils import BearingRange, Pose, Velocities
 
 
 
@@ -28,7 +27,7 @@ class SensorInterface(ABC):
         last_meas_t: time of last sensor measurement
     """
 
-    def __init__(self, name: str, robot: Robot, interval: float):
+    def __init__(self, name: str, robot, interval: float):
         """
         Initialize a sensor class instace.
 
@@ -94,7 +93,7 @@ class WheelEncoder(SensorInterface):
 
     def __init__(
         self,
-        robot: Robot,
+        robot,
         name="wheel_encoder",
         interval=0.1,
         lin_noise=0.05,
