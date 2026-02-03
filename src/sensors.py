@@ -198,5 +198,7 @@ class LandmarkPinger(SensorInterface):
                 range=noisy_range
             )
             noisy_prox.append(noise_prox)
+        
+        self.last_meas_t = self.robot.env.time
 
         return noisy_prox
