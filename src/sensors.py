@@ -113,20 +113,31 @@ class WheelEncoder(SensorInterface):
         super().__init__(name, robot, interval)
         self.LIN_NOISE = lin_noise # m/s
         self.ANG_NOISE = ang_noise # rad/s
+        self.last_pose: Pose = robot.env.robot_pose
 
     def sample(self):
         """
         Sample the robot's linear and angular velocity.
         """
-        pose: Pose = self.robot.env.robot_pose
+        cur_pose: Pose = self.robot.env.robot_pose
+        last_pose = self.last_pose
 
+        dx =  cur_pose.pos.x - last_pose.pos.x
+        dy = cur_pose.pos.y - last_pose.pos.y
+        dtheta = cur_pose.theta - last_pose.theta
         dt = self.robot.env.time - self.last_meas_t
-        self.robot.
 
-        x_noise = random.gauss(pose.pos.x, sigma=self.LIN_NOISE)
-        # TODO: fill in the function
-        pass
+        true_lin_speed = math.sqrt(dx**2 + dy**2) / dt
+        true_ang_speed = dtheta / dt
 
+        sample_lin_speed = random.gauss(true_lin_speed, self.LIN_NOISE)
+        sample_ang_speed = random.gauss(true_ang_speed, self.ANG_NOISE)
+
+        # update previous values to current
+        self.last_meas_t = self.robot.env.time
+        self.last_pose = cur_pose
+
+        return sample_lin_speed, sample_ang_speed
 
 class LandmarkPinger(SensorInterface):
     """

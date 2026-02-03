@@ -116,8 +116,7 @@ class Environment:
         """
         Return the true robot pose.
         """
-        # TODO: fill in the function
-        pass
+        return self.robot_pose
     
 
     def _get_proximity_to_landmark(self, lm: Landmark):
