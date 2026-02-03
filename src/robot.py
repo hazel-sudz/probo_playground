@@ -6,7 +6,9 @@ The Robot class models the robotic agent that explores the world. The robot is r
 
 from environment import Environment
 from sensors import SensorInterface
+from typing import List
 import math
+import pandas as pd
 
 class Robot:
     """
@@ -25,7 +27,7 @@ class Robot:
             env: the environment this robot is operating in
         """
         self.env = env
-        self.sensors = []
+        self.sensors: List[SensorInterface] = []
     
     def _angle_norm(self, angle: float):
         """
@@ -75,12 +77,23 @@ class Robot:
         dtheta = ang_vel * self.env.DT
 
         self.env.robot_step(dx, dy, dtheta)
-        
+
         return (dx, dy, dtheta)
 
     def take_sensor_measurements(self):
         """
         Return noisy sensor readings of the environment at this timestep, including data from all sensors, in a table format.
         """
-        # TODO: fill in the function
-        pass
+        row = {"time": self.env.time}
+        for sensor in self.sensors:
+            dt = self.env.time - sensor.last_meas_t
+            if dt >= sensor.interval:
+                reading = sensor.sample()
+                if sensor.name == "wheel_encoder":
+                    row["enc_lin_vel"] = reading.linear
+                    row["enc_ang_vel"] = reading.angular
+                elif sensor.name == "landmark_pinger":
+                    for br in reading:
+                        row[f"lm_{int(br.landmark_id)}_bearing"] = br.bearing
+                        row[f"lm_{int(br.landmark_id)}_range"] = br.range
+        return pd.DataFrame([row])

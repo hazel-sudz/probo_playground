@@ -13,7 +13,7 @@ from math import pi
 import random, math
 
 from src.robot import Robot
-from src.utils import BearingRange, Pose
+from src.utils import BearingRange, Pose, Velocities
 
 
 
@@ -113,7 +113,7 @@ class WheelEncoder(SensorInterface):
         super().__init__(name, robot, interval)
         self.LIN_NOISE = lin_noise # m/s
         self.ANG_NOISE = ang_noise # rad/s
-        self.last_pose: Pose = robot.env.robot_pose
+        self.last_pose: Pose = robot.env.robot_pose.deep_copy()
 
     def sample(self):
         """
@@ -135,9 +135,9 @@ class WheelEncoder(SensorInterface):
 
         # update previous values to current
         self.last_meas_t = self.robot.env.time
-        self.last_pose = cur_pose
+        self.last_pose = cur_pose.deep_copy()
 
-        return sample_lin_speed, sample_ang_speed
+        return Velocities(linear=sample_lin_speed, angular=sample_ang_speed)
 
 class LandmarkPinger(SensorInterface):
     """

@@ -174,3 +174,28 @@ class BearingRange:
         Return in string format.
         """
         return f"LM{self.landmark_id}B{self.bearing}R{self.range}"
+
+
+@dataclass(frozen=True)
+class Velocities:
+    """
+    Represents a linear and angular velocity measurement.
+    """
+
+    linear: float
+    angular: float
+
+    def to_dict(self):
+        """
+        Return in dictionary format.
+        """
+        return {
+            "linear": self.linear,
+            "angular": self.angular,
+        }
+
+    def to_string(self):
+        """
+        Return in string format.
+        """
+        return f"L{self.linear}A{self.angular}"
