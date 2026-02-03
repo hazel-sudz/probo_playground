@@ -6,7 +6,7 @@ The Robot class models the robotic agent that explores the world. The robot is r
 
 from environment import Environment
 from sensors import SensorInterface
-
+import math
 
 class Robot:
     """
@@ -24,10 +24,14 @@ class Robot:
         Args:
             env: the environment this robot is operating in
         """
-        # TODO: set the environment property to the parameter value
-        self.env = None
-        # TODO: initialize the sensors property as an empty list
+        self.env = env
         self.sensors = []
+    
+    def _angle_norm(self, angle: float):
+        """
+            Normalize an angle with ring-mod
+        """
+        return ((angle % (2*math.pi)) + (2*math.pi)) % (2*math.pi)
 
     def robot_step_differential(self, lin_vel: float, ang_vel: float):
         """
@@ -42,8 +46,15 @@ class Robot:
             dy: change in y position
             d-theta: change in heading
         """
-        # TODO: fill in the function
-        pass
+
+        l = lin_vel * self.env.DT
+        dx = math.cos(self.env.robot_pose.theta) * l
+        dy = math.sin(self.env.robot_pose.theta) * l
+        dtheta = ang_vel * self.env.DT
+
+        self.env.robot_step(dx, dy, dtheta)
+
+        return (dx, dy, dtheta)
 
     def robot_step_translational(self, x_vel: float, y_vel: float, ang_vel: float):
         """
@@ -59,8 +70,13 @@ class Robot:
             dy: change in y position
             d-theta: change in heading
         """
-        # TODO: fill in the function
-        pass
+        dx = x_vel * self.env.DT
+        dy = y_vel * self.env.DT
+        dtheta = ang_vel * self.env.DT
+
+        self.env.robot_step(dx, dy, dtheta)
+        
+        return (dx, dy, dtheta)
 
     def take_sensor_measurements(self):
         """
