@@ -13,7 +13,7 @@ from math import pi
 import random, math
 
 from src.robot import Robot
-from src.utils import Pose
+from src.utils import BearingRange, Pose
 
 
 
@@ -172,15 +172,31 @@ class LandmarkPinger(SensorInterface):
             interval (float): period between measurements
         """
         super().__init__(name, robot, interval)
-        # TODO: save max range and all noise constants as properties
-        self.MAX_RANGE = None  # meters
-        self.RANGE_NOISE = None  # meters
-        self.RANGE_PROP_NOISE = None
-        self.BEARING_NOISE = None  # radians
+        self.MAX_RANGE = max_range # meters
+        self.RANGE_NOISE = range_noise # meters
+        self.RANGE_PROP_NOISE = range_prop_noise
+        self.BEARING_NOISE = bearing_noise # radians
 
     def sample(self):
         """
         Reports noisy measurements of the bearing and range between the robot and all nearby landmarks.
         """
-        # TODO: fill in the function
-        pass
+        
+        gt_prox = self.robot.env.get_proximity_to_landmarks()
+        noisy_prox = []
+
+        for prox in gt_prox:
+            if prox.range > self.MAX_RANGE:
+                noisy_range = math.inf
+            else:
+                noisy_range = random.gauss(
+                    prox.range, self.RANGE_NOISE + (self.RANGE_PROP_NOISE * prox.range)
+                )
+            noise_prox = BearingRange(
+                landmark_id=prox.landmark_id,
+                bearing=random.gauss(prox.bearing, self.BEARING_NOISE),
+                range=noisy_range
+            )
+            noisy_prox.append(noise_prox)
+
+        return noisy_prox
