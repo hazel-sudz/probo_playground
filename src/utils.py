@@ -31,6 +31,15 @@ class Position:
         Return in string format.
         """
         return f"X{self.x}Y{self.y}"
+    
+    def deep_copy(self):
+        """
+        Return a deep copy of the current object
+        """
+        return Position(
+            x=self.x,
+            y=self.y
+        )
 
 
 @dataclass(unsafe_hash=True)
@@ -56,6 +65,16 @@ class Pose:
         Return in string format.
         """
         return self.pos.to_string() + f"T{self.theta}"
+    
+    def deep_copy(self):
+        """
+        Return a deep copy of the current pose object
+        """
+
+        return Pose(
+            pos=self.pos.deep_copy(),
+            theta=self.theta
+        )
 
 
 @dataclass(frozen=True)

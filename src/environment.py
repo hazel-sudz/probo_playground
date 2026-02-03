@@ -78,7 +78,6 @@ class Environment:
             dx: change in x position that should be executed
             dy: change in y position that should be executed
         """
-        # TODO: fill in the function
         pass
 
     def is_valid_position(self, position: Position):
@@ -91,8 +90,17 @@ class Environment:
         Returns:
             true if the position is valid and false otherwise
         """
-        # TODO: fill in the function
-        pass
+
+        # check map boundary
+        if not self.DIMENSIONS.within_bounds(position):
+            return False
+
+        # check obstacles
+        for bound in self.OBSTACLES:
+            if not bound.within_bounds(position):
+                return False
+
+        return True 
 
     def get_robot_pose(self):
         """
