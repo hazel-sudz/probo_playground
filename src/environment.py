@@ -39,21 +39,16 @@ class Environment:
             landmarks: a list of landmarks
             robot_starting_pose: the initial position and heading of the robot
         """
-        # TODO: set the dimensions property to the parameter value
-        self.DIMENSIONS = None
+        self.DIMENSIONS = dimensions
 
-        # TODO: set the timestep size property to the parameter value
-        self.DT = None
+        self.DT = dt
 
-        # TODO: set the current time to zero
-        self.time = None
+        self.time = 0.0
 
-        # TODO: set the obstacles and landmarks properties to the parameter lists
-        self.OBSTACLES = None
-        self.LANDMARKS = None
+        self.OBSTACLES = obstacles 
+        self.LANDMARKS = landmarks
 
-        # TODO: set the robot pose property to the parameter value
-        self.robot_pose = None
+        self.robot_pose = robot_starting_pose
 
     def robot_step(self, dx: float, dy: float, dtheta: float):
         """
@@ -67,8 +62,9 @@ class Environment:
         Returns:
             Nothing, but update the robot_pose property at the end
         """
-        # TODO: fill in the function
-        pass
+        self.robot_pose.pos.x += dx
+        self.robot_pose.pos.y += dy
+        self.robot_pose.theta = (self.robot_pose.theta + dtheta) % 360
 
     def is_valid_motion(self, dx: float, dy: float):
         """
