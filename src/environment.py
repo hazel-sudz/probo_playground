@@ -78,7 +78,16 @@ class Environment:
             dx: change in x position that should be executed
             dy: change in y position that should be executed
         """
-        pass
+
+        current_pose = self.robot_pose.deep_copy()
+        next_pose = current_pose.deep_copy()
+
+        next_pose.pos.x += dx
+        next_pose.pos.y += dy
+
+        if self.is_valid_position(next_pose):
+            return next_pose.pos
+        return current_pose.pos
 
     def is_valid_position(self, position: Position):
         """
