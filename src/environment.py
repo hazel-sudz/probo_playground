@@ -62,11 +62,10 @@ class Environment:
         Returns:
             Nothing, but update the robot_pose property at the end
         """
-        self.robot_pose.pos.x += dx
-        self.robot_pose.pos.y += dy
+        self.robot_pose.pos = self.is_valid_motion(dx, dy)
         self.robot_pose.theta = (self.robot_pose.theta + dtheta) % 360
 
-    def is_valid_motion(self, dx: float, dy: float):
+    def is_valid_motion(self, dx: float, dy: float) -> Position:
         """
         Given attempted x and y motion by the robot, determine what motion is physically possible (i.e. doesn't go through any obstacles or barriers). Return the actual motion that will be executed.
 
