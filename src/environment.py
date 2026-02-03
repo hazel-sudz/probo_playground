@@ -7,6 +7,7 @@ Critically, the environment tracks the robot's state. In this case, the robot's 
 """
 
 from utils import Position, Pose, Bounds, Landmark, BearingRange
+import math
 
 
 class Environment:
@@ -116,13 +117,37 @@ class Environment:
         """
         # TODO: fill in the function
         pass
+    
+
+    def _get_proximity_to_landmark(self, lm: Landmark):
+        """
+        Return the robot's range and bearing to a given landmark
+        """
+
+        dx = lm.pos.x - self.robot_pose.x
+        dy = lm.pos.y - self.robot_pose.y
+        range = math.sqrt(dx**2 + dy**2)
+
+        # angle from x-axis
+        dtheta = math.atan2(dy, dx)
+
+        # offeset angle by current bearing
+        dtheta -= self.robot_pose.theta
+
+        # norm with ring-mod
+        dtheta = (dtheta + 2*math.pi) % (2*math.pi)
+
+        return BearingRange(
+            landmark_id=lm.id,
+            bearing=dtheta,
+            range=range
+        )
 
     def get_proximity_to_landmarks(self):
         """
         Return a list of the robot's true range and bearing to all landmarks.
         """
-        # TODO: fill in the function
-        pass
+        return [self._get_proximity_to_landmark(lm) for lm in self.LANDMARKS]
 
     def take_state_snapshot(self):
         """
