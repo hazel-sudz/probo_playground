@@ -8,6 +8,7 @@ Critically, the environment tracks the robot's state. In this case, the robot's 
 
 from utils import Position, Pose, Bounds, Landmark, BearingRange
 import math
+import pandas as pd
 
 
 class Environment:
@@ -124,15 +125,15 @@ class Environment:
         Return the robot's range and bearing to a given landmark
         """
 
-        dx = lm.pos.x - self.robot_pose.x
-        dy = lm.pos.y - self.robot_pose.y
+        dx = lm.pos.x - self.robot_pose.pos.x
+        dy = lm.pos.y - self.robot_pose.pos.y
         range = math.sqrt(dx**2 + dy**2)
 
-        # angle from x-axis
+        # angle from x-axis (radians)
         dtheta = math.atan2(dy, dx)
 
-        # offeset angle by current bearing
-        dtheta -= self.robot_pose.theta
+        # offset angle by current bearing (convert theta from degrees to radians)
+        dtheta -= math.radians(self.robot_pose.theta)
 
         # norm with ring-mod
         dtheta = (dtheta + 2*math.pi) % (2*math.pi)
@@ -153,12 +154,25 @@ class Environment:
         """
         Return true state information about this timestep, including time, robot position, and the robot's bearing/range to landmarks, in a table format.
         """
-        # TODO: fill in the function
-        pass
+        proximity = self.get_proximity_to_landmarks()
+        row = {
+            "time": self.time,
+            "robot_x": self.robot_pose.pos.x,
+            "robot_y": self.robot_pose.pos.y,
+            "robot_theta": self.robot_pose.theta,
+        }
+        for br in proximity:
+            row[f"lm_{int(br.landmark_id)}_bearing"] = br.bearing
+            row[f"lm_{int(br.landmark_id)}_range"] = br.range
+        return pd.DataFrame([row])
 
     def get_environment_info(self):
         """
         Return static information about the environment, including dimensions, timestep size, locations and dimensions of obstacles, and locations of landmarks.
         """
-        # TODO: fill in the function
-        pass
+        return {
+            "dimensions": self.DIMENSIONS.to_dict(),
+            "dt": self.DT,
+            "obstacles": [obs.to_dict() for obs in self.OBSTACLES],
+            "landmarks": [lm.to_dict() for lm in self.LANDMARKS],
+        }
