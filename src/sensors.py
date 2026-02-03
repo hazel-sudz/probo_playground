@@ -10,6 +10,11 @@ Proprioceptive sensors measure the robot's relationship to its past states. This
 
 from abc import ABC, abstractmethod
 from math import pi
+import random, math
+
+from src.robot import Robot
+from src.utils import Pose
+
 
 
 class SensorInterface(ABC):
@@ -23,7 +28,7 @@ class SensorInterface(ABC):
         last_meas_t: time of last sensor measurement
     """
 
-    def __init__(self, name: str, robot, interval: float):
+    def __init__(self, name: str, robot: Robot, interval: float):
         """
         Initialize a sensor class instace.
 
@@ -89,7 +94,7 @@ class WheelEncoder(SensorInterface):
 
     def __init__(
         self,
-        robot,
+        robot: Robot,
         name="wheel_encoder",
         interval=0.1,
         lin_noise=0.05,
@@ -106,14 +111,19 @@ class WheelEncoder(SensorInterface):
             angular_noise_ratio: proportional noise for angular
         """
         super().__init__(name, robot, interval)
-        # TODO: save all noise constants as properties
-        self.LIN_NOISE = None  # m/s
-        self.ANG_NOISE = None  # rad/s
+        self.LIN_NOISE = lin_noise # m/s
+        self.ANG_NOISE = ang_noise # rad/s
 
     def sample(self):
         """
         Sample the robot's linear and angular velocity.
         """
+        pose: Pose = self.robot.env.robot_pose
+
+        dt = self.robot.env.time - self.last_meas_t
+        self.robot.
+
+        x_noise = random.gauss(pose.pos.x, sigma=self.LIN_NOISE)
         # TODO: fill in the function
         pass
 
