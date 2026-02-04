@@ -107,5 +107,10 @@ def run_scenario(scenario_name):
 if __name__ == "__main__":
     scenario = sys.argv[1]
     gt_df, sensor_df = run_scenario(scenario)
-    print("Ground truth shape:", gt_df.shape)
-    print("Sensor data shape:", sensor_df.shape)
+
+    output_dir = os.path.join(os.path.dirname(__file__), "..", "output", scenario)
+    os.makedirs(output_dir, exist_ok=True)
+
+    gt_df.to_csv(os.path.join(output_dir, "ground_truth.csv"), index=False)
+    sensor_df.to_csv(os.path.join(output_dir, "sensor_data.csv"), index=False)
+    print(f"Saved outputs to {output_dir}")
