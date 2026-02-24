@@ -11,6 +11,8 @@ u = [v_x, v_y, w]
 import numpy as np
 import random
 
+from utils import wrap_angle
+
 
 class KalmanFilter:
     """
@@ -60,11 +62,12 @@ class KalmanFilter:
         Args:
             u: the input control vector
         """
-        # TODO: update the state vector using the state transition matrix and the given control input
-        self.x = None
+        # update the state vector using the state transition matrix and the given control input
+        self.x = self.F @ self.x + self.B @ u
+        self.x[2] = wrap_angle(self.x[2])
 
-        # TODO: update the process model by propagating it through the state transition matrix and adding noise
-        self.P = None
+        # update the process model by propagating it through the state transition matrix and adding noise
+        self.P = self.F @ self.P @ self.F.T + self.Q
 
         return self.x, self.P
 
