@@ -85,7 +85,8 @@ def run_scenario(scenario_name):
         for row in reader:
             vel_commands.append({
                 "timestamp": float(row["timestamp"]),
-                "linear_vel": float(row["linear_vel"]),
+                "x_vel": float(row["x_vel"]),
+                "y_vel": float(row["y_vel"]),
                 "angular_vel": float(row["angular_vel"]),
             })
 
@@ -96,8 +97,9 @@ def run_scenario(scenario_name):
     kalman_filter_history = []
 
     cmd_index = 0
-    current_lin_vel = 0.0
-    current_ang_vel = 0.0
+    u_x = 0.0
+    u_y = 0.0
+    u_theta = 0.0
 
     for step in range(total_timesteps + 1):
         # Snapshot ground truth
@@ -107,8 +109,7 @@ def run_scenario(scenario_name):
         sensor_data_history.append(robot.take_sensor_measurements())
 
         if LINEAR:
-            # TODO: call the Kalman Filter prediction step
-
+            x, p = kf.predict(np.array([u_x, u_y, u_theta]))
             # TODO: call the Kalman Filter update step if new sensor data is available
             pass
         else:
@@ -119,12 +120,13 @@ def run_scenario(scenario_name):
 
         # Check if a new command should be applied at this timestamp
         while cmd_index < len(vel_commands) and vel_commands[cmd_index]["timestamp"] <= env.time:
-            current_lin_vel = vel_commands[cmd_index]["linear_vel"]
-            current_ang_vel = vel_commands[cmd_index]["angular_vel"]
+            u_x = vel_commands[cmd_index]["x_vel"]
+            u_y = vel_commands[cmd_index]["y_vel"]
+            u_theta = vel_commands[cmd_index]["angular_vel"]
             cmd_index += 1
 
         # Execute motor command
-        robot.robot_step_differential(current_lin_vel, current_ang_vel)
+        robot.robot_step_translational(u_x, u_y, u_theta)
 
         # Advance time
         env.time += env.DT
