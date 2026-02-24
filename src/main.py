@@ -109,7 +109,16 @@ def run_scenario(scenario_name):
         sensor_data_history.append(robot.take_sensor_measurements())
 
         if LINEAR:
-            x, p = kf.predict(np.array([u_x, u_y, u_theta]))
+            sensor_row = sensor_data_history[-1].iloc[0]
+            enc_x = sensor_row.get("enc_x_vel")
+            enc_y = sensor_row.get("enc_y_vel")
+            enc_w = sensor_row.get("enc_ang_vel")
+
+            if pd.notna(enc_x) and pd.notna(enc_y) and pd.notna(enc_w):
+                x, p = kf.predict(np.array([enc_x, enc_y, enc_w]))
+            else:
+                x, p = kf.predict(np.array([0.0, 0.0, 0.0]))
+
             kalman_filter_history.append({
                 "t": env.time,
                 "kf_x": float(x[0]),

@@ -133,15 +133,16 @@ class Visualizer:
 
         poses = []
         for _, row in self.sensor_data.iterrows():
-            v = row.get("enc_lin_vel")
+            vx = row.get("enc_x_vel")
+            vy = row.get("enc_y_vel")
             w = row.get("enc_ang_vel")
 
-            if pd.isna(v) or pd.isna(w):
+            if pd.isna(vx) or pd.isna(vy) or pd.isna(w):
                 poses.append({"Time": row["time"], "x": x, "y": y, "theta": theta})
                 continue
 
-            x += np.cos(theta) * v * dt
-            y += np.sin(theta) * v * dt
+            x += vx * dt
+            y += vy * dt
             theta += w * dt
             theta = theta % (2 * np.pi)
 

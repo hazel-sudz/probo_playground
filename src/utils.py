@@ -210,3 +210,14 @@ class Velocities:
         Return in string format.
         """
         return f"L{self.linear}A{self.angular}"
+
+
+@dataclass(frozen=True)
+class TranslationalVelocities:
+    """
+    Represents translational (x, y) and angular velocity measurements.
+    """
+
+    x: float
+    y: float
+    angular: float

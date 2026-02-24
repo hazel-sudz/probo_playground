@@ -87,10 +87,11 @@ class Robot:
         row = {"time": self.env.time}
         for sensor in self.sensors:
             dt = self.env.time - sensor.last_meas_t
-            if dt >= sensor.interval:
+            if dt >= sensor.interval - 1e-9:
                 reading = sensor.sample()
                 if sensor.name == "wheel_encoder":
-                    row["enc_lin_vel"] = reading.linear
+                    row["enc_x_vel"] = reading.x
+                    row["enc_y_vel"] = reading.y
                     row["enc_ang_vel"] = reading.angular
                 elif sensor.name == "landmark_pinger":
                     for br in reading:

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from math import pi
 import random, math
 
-from utils import BearingRange, Pose, Velocities
+from utils import BearingRange, Pose, Velocities, TranslationalVelocities
 
 
 import numpy as np
@@ -122,27 +122,29 @@ class WheelEncoder(SensorInterface):
 
     def sample(self):
         """
-        Sample the robot's linear and angular velocity.
+        Sample the robot's translational (x, y) and angular velocity.
         """
         cur_pose: Pose = self.robot.env.robot_pose
         last_pose = self.last_pose
 
-        dx =  cur_pose.pos.x - last_pose.pos.x
+        dx = cur_pose.pos.x - last_pose.pos.x
         dy = cur_pose.pos.y - last_pose.pos.y
         dtheta = cur_pose.theta - last_pose.theta
         dt = self.robot.env.time - self.last_meas_t
 
-        true_lin_speed = math.sqrt(dx**2 + dy**2) / dt
-        true_ang_speed = dtheta / dt
+        true_vx = dx / dt
+        true_vy = dy / dt
+        true_w = dtheta / dt
 
-        sample_lin_speed = random.gauss(true_lin_speed, self.LIN_NOISE)
-        sample_ang_speed = random.gauss(true_ang_speed, self.ANG_NOISE)
+        noisy_vx = random.gauss(true_vx, self.LIN_NOISE)
+        noisy_vy = random.gauss(true_vy, self.LIN_NOISE)
+        noisy_w = random.gauss(true_w, self.ANG_NOISE)
 
         # update previous values to current
         self.last_meas_t = self.robot.env.time
         self.last_pose = cur_pose.deep_copy()
 
-        return Velocities(linear=sample_lin_speed, angular=sample_ang_speed)
+        return TranslationalVelocities(x=noisy_vx, y=noisy_vy, angular=noisy_w)
 
 class LandmarkPinger(SensorInterface):
     """

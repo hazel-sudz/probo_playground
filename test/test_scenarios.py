@@ -76,10 +76,10 @@ class TestMovementOnly:
         """Robot theta should remain 0 throughout."""
         assert (self.gt["robot_theta"] == 0.0).all()
 
-    def test_enc_lin_vel_present_and_nonzero(self):
-        """Encoder linear velocity columns should be present and non-zero when sampled."""
-        assert "enc_lin_vel" in self.sensor.columns
-        sampled = self.sensor["enc_lin_vel"].dropna()
+    def test_enc_x_vel_present_and_nonzero(self):
+        """Encoder x velocity column should be present and non-zero when sampled."""
+        assert "enc_x_vel" in self.sensor.columns
+        sampled = self.sensor["enc_x_vel"].dropna()
         assert len(sampled) > 0
         assert sampled.abs().sum() > 0
 
@@ -104,10 +104,16 @@ class TestRotationOnly:
         """Robot theta should change over time."""
         assert self.gt["robot_theta"].nunique() > 1
 
-    def test_enc_lin_vel_near_zero(self):
-        """Encoder linear velocity should be near zero."""
-        assert "enc_lin_vel" in self.sensor.columns
-        sampled = self.sensor["enc_lin_vel"].dropna()
+    def test_enc_x_vel_near_zero(self):
+        """Encoder x velocity should be near zero."""
+        assert "enc_x_vel" in self.sensor.columns
+        sampled = self.sensor["enc_x_vel"].dropna()
+        assert sampled.abs().mean() < 0.5
+
+    def test_enc_y_vel_near_zero(self):
+        """Encoder y velocity should be near zero."""
+        assert "enc_y_vel" in self.sensor.columns
+        sampled = self.sensor["enc_y_vel"].dropna()
         assert sampled.abs().mean() < 0.5
 
     def test_enc_ang_vel_nonzero(self):
