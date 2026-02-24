@@ -71,7 +71,8 @@ def run_scenario(scenario_name):
         )
 
     # Attach sensors
-    encoder = WheelEncoder(robot)
+    enc_cfg = config.get("encoder_noise", {})
+    encoder = WheelEncoder(robot, **enc_cfg)
     pinger = LandmarkPinger(robot)
     gps = GPS(robot, name="gps", interval=1.0, x_noise=0.5, y_noise=0.5)
     robot.sensors.append(encoder)
