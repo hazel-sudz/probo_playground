@@ -1,0 +1,11 @@
+{
+  "dimensions": {"x_min": -50, "x_max": 50, "y_min": -50, "y_max": 50},
+  "dt": 0.1,
+  "total_seconds": 40,
+  "obstacles": [],
+  "landmarks": [
+    {"id": 1, "x": 10.0, "y": 0.0},
+    {"id": 2, "x": 0.0, "y": 10.0}
+  ],
+  "initial_robot_pose": {"x": -40.0, "y": 40.0, "theta": 0.0}
+}

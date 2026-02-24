@@ -43,6 +43,25 @@ def rotation_only_data(request):
     request.cls.kalman = kalman
 
 
+@pytest.fixture(scope="class")
+def box_draw_data(request):
+    gt, sensor, kalman = run_scenario("box_draw")
+
+    output_dir = Path(__file__).resolve().parent.parent / "output" / "box_draw"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    gt.to_csv(output_dir / "ground_truth.csv", index=False)
+    sensor.to_csv(output_dir / "sensor_data.csv", index=False)
+    kalman.to_csv(output_dir / "kalman_data.csv", index=False)
+
+    vis = Visualizer("box_draw")
+    vis.draw_all()
+    vis.animate_trajectories()
+
+    request.cls.gt = gt
+    request.cls.sensor = sensor
+    request.cls.kalman = kalman
+
+
 @pytest.mark.usefixtures("movement_only_data")
 class TestMovementOnly:
     def test_x_increases(self):
@@ -97,3 +116,40 @@ class TestRotationOnly:
         sampled = self.sensor["enc_ang_vel"].dropna()
         assert len(sampled) > 0
         assert sampled.abs().sum() > 0
+
+
+@pytest.mark.usefixtures("box_draw_data")
+class TestBoxDraw:
+    def test_returns_to_start(self):
+        """Robot should return to starting position (-40, 40) after tracing the box."""
+        tol = 1.0
+        assert abs(self.gt["robot_x"].iloc[-1] - (-40.0)) < tol
+        assert abs(self.gt["robot_y"].iloc[-1] - 40.0) < tol
+
+    def test_reaches_bottom_left(self):
+        """At t~10s robot should be near (-40, -40)."""
+        tol = 1.0
+        dt = 0.1
+        idx = int(10.0 / dt)
+        assert abs(self.gt["robot_x"].iloc[idx] - (-40.0)) < tol
+        assert abs(self.gt["robot_y"].iloc[idx] - (-40.0)) < tol
+
+    def test_reaches_bottom_right(self):
+        """At t~20s robot should be near (40, -40)."""
+        tol = 1.0
+        dt = 0.1
+        idx = int(20.0 / dt)
+        assert abs(self.gt["robot_x"].iloc[idx] - 40.0) < tol
+        assert abs(self.gt["robot_y"].iloc[idx] - (-40.0)) < tol
+
+    def test_reaches_top_right(self):
+        """At t~30s robot should be near (40, 40)."""
+        tol = 1.0
+        dt = 0.1
+        idx = int(30.0 / dt)
+        assert abs(self.gt["robot_x"].iloc[idx] - 40.0) < tol
+        assert abs(self.gt["robot_y"].iloc[idx] - 40.0) < tol
+
+    def test_theta_stays_zero(self):
+        """Robot theta should remain 0 throughout (no angular velocity)."""
+        assert (self.gt["robot_theta"] == 0.0).all()
