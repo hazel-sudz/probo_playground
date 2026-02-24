@@ -110,6 +110,14 @@ def run_scenario(scenario_name):
 
         if LINEAR:
             x, p = kf.predict(np.array([u_x, u_y, u_theta]))
+            kalman_filter_history.append({
+                "u_x": u_x,
+                "u_y": u_y,
+                "u_theta": u_theta,
+                "x": x,
+                "p": p,
+                "t": env.time,
+            })
             # TODO: call the Kalman Filter update step if new sensor data is available
             pass
         else:
@@ -134,7 +142,7 @@ def run_scenario(scenario_name):
     ground_truth_df = pd.concat(ground_truth_history, ignore_index=True)
     sensor_data_df = pd.concat(sensor_data_history, ignore_index=True)
 
-    return ground_truth_df, sensor_data_df
+    return ground_truth_df, sensor_data_df, kalman_filter_history
 
 
 if __name__ == "__main__":
