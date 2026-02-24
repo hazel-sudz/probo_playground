@@ -328,15 +328,23 @@ class GPS(SensorInterface):
         self.X_NOISE = x_noise
         self.Y_NOISE = y_noise
 
-        # TODO: fill in the measurement model
-        self.H = None
+        # measurement model
+        # Hx = [[1, 0, 0], [0, 1, 0]] @ [x, y, theta]^T = [x,y] 
+        self.H = np.array([[1, 0, 0], [0, 1, 0]])
 
         # TODO: fill in the noise model
-        self.R = None
+        self.R = np.array([[self.X_NOISE**2, 0], [0, self.Y_NOISE**2]])
 
     def sample(self):
         """
         Take a noisy GPS measurement of robot position.
         """
-        # TODO: fill in the function
-        pass
+        cur_pos = self.robot.env.robot_pose.pos.deep_copy()
+        sample = np.array([
+            random.gauss(cur_pos.x, self.X_NOISE), 
+            random.gauss(cur_pos.y, self.Y_NOISE)
+        ])
+        self.last_meas_t = self.robot.env.time
+        return sample
+
+
