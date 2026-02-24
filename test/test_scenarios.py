@@ -1,12 +1,50 @@
+from pathlib import Path
+
 import pytest
 from main import run_scenario
+from vis import Visualizer
 
 
+@pytest.fixture(scope="class")
+def movement_only_data(request):
+    gt, sensor, kalman = run_scenario("movement_only")
+
+    output_dir = Path(__file__).resolve().parent.parent / "output" / "movement_only"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    gt.to_csv(output_dir / "ground_truth.csv", index=False)
+    sensor.to_csv(output_dir / "sensor_data.csv", index=False)
+    kalman.to_csv(output_dir / "kalman_data.csv", index=False)
+
+    vis = Visualizer("movement_only")
+    vis.draw_all()
+    vis.animate_trajectories()
+
+    request.cls.gt = gt
+    request.cls.sensor = sensor
+    request.cls.kalman = kalman
+
+
+@pytest.fixture(scope="class")
+def rotation_only_data(request):
+    gt, sensor, kalman = run_scenario("rotation_only")
+
+    output_dir = Path(__file__).resolve().parent.parent / "output" / "rotation_only"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    gt.to_csv(output_dir / "ground_truth.csv", index=False)
+    sensor.to_csv(output_dir / "sensor_data.csv", index=False)
+    kalman.to_csv(output_dir / "kalman_data.csv", index=False)
+
+    vis = Visualizer("rotation_only")
+    vis.draw_all()
+    vis.animate_trajectories()
+
+    request.cls.gt = gt
+    request.cls.sensor = sensor
+    request.cls.kalman = kalman
+
+
+@pytest.mark.usefixtures("movement_only_data")
 class TestMovementOnly:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.gt, self.sensor = run_scenario("movement_only")
-
     def test_x_increases(self):
         """Robot x position should increase over time (moving forward at heading=0)."""
         assert self.gt["robot_x"].iloc[-1] > self.gt["robot_x"].iloc[0]
@@ -33,11 +71,8 @@ class TestMovementOnly:
         assert sampled.abs().mean() < 0.5
 
 
+@pytest.mark.usefixtures("rotation_only_data")
 class TestRotationOnly:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.gt, self.sensor = run_scenario("rotation_only")
-
     def test_x_stays_zero(self):
         """Robot x position should stay at 0 (no linear vel)."""
         assert self.gt["robot_x"].abs().max() < 1e-6

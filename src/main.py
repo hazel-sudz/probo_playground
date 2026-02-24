@@ -111,12 +111,13 @@ def run_scenario(scenario_name):
         if LINEAR:
             x, p = kf.predict(np.array([u_x, u_y, u_theta]))
             kalman_filter_history.append({
-                "u_x": u_x,
-                "u_y": u_y,
-                "u_theta": u_theta,
-                "x": x,
-                "p": p,
                 "t": env.time,
+                "kf_x": float(x[0]),
+                "kf_y": float(x[1]),
+                "kf_theta": float(x[2]),
+                "p_xx": float(p[0, 0]),
+                "p_yy": float(p[1, 1]),
+                "p_tt": float(p[2, 2]),
             })
             # TODO: call the Kalman Filter update step if new sensor data is available
             pass
@@ -141,17 +142,19 @@ def run_scenario(scenario_name):
 
     ground_truth_df = pd.concat(ground_truth_history, ignore_index=True)
     sensor_data_df = pd.concat(sensor_data_history, ignore_index=True)
+    kalman_data_df = pd.DataFrame(kalman_filter_history)
 
-    return ground_truth_df, sensor_data_df, kalman_filter_history
+    return ground_truth_df, sensor_data_df, kalman_data_df
 
 
 if __name__ == "__main__":
     scenario = sys.argv[1]
-    gt_df, sensor_df = run_scenario(scenario)
+    gt_df, sensor_df, kalman_df = run_scenario(scenario)
 
     output_dir = os.path.join(os.path.dirname(__file__), "..", "output", scenario)
     os.makedirs(output_dir, exist_ok=True)
 
     gt_df.to_csv(os.path.join(output_dir, "ground_truth.csv"), index=False)
     sensor_df.to_csv(os.path.join(output_dir, "sensor_data.csv"), index=False)
+    kalman_df.to_csv(os.path.join(output_dir, "kalman_data.csv"), index=False)
     print(f"Saved outputs to {output_dir}")

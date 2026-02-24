@@ -29,6 +29,9 @@ class Visualizer:
         self.gt_data = pd.read_csv(self.output_path / "ground_truth.csv")
         self.sensor_data = pd.read_csv(self.output_path / "sensor_data.csv")
 
+        kf_path = self.output_path / "kalman_data.csv"
+        self.kf_data = pd.read_csv(kf_path) if kf_path.exists() else None
+
         with open(input_path / "config.json", "r") as f:
             self.config = json.load(f)
 
@@ -104,6 +107,17 @@ class Visualizer:
             "robot_x": "x",
             "robot_y": "y",
             "robot_theta": "theta",
+        })[["Time", "x", "y", "theta"]]
+
+    def poses_from_kf(self):
+        """
+        Return KF predicted poses as a DataFrame with columns: Time, x, y, theta.
+        Returns None if no KF data is available.
+        """
+        if self.kf_data is None:
+            return None
+        return self.kf_data.rename(columns={
+            "t": "Time", "kf_x": "x", "kf_y": "y", "kf_theta": "theta",
         })[["Time", "x", "y", "theta"]]
 
     def poses_from_odom(self):
@@ -258,6 +272,10 @@ class Visualizer:
             "red",
         )
 
+        kf_poses = self.poses_from_kf()
+        if kf_poses is not None:
+            self.plot_single_trajectory("KF Prediction", kf_poses, "blue")
+
         obs_lm = self.observed_landmarks()
         if not obs_lm.empty:
             ax = plt.gca()
@@ -288,9 +306,13 @@ class Visualizer:
         """
         gt_poses = self.poses_from_gt()
         odom_poses = self.poses_from_odom()
+        kf_poses = self.poses_from_kf()
         obs_lm = self.observed_landmarks()
 
-        max_frames = max(len(gt_poses), len(odom_poses))
+        frame_counts = [len(gt_poses), len(odom_poses)]
+        if kf_poses is not None:
+            frame_counts.append(len(kf_poses))
+        max_frames = max(frame_counts)
         frame_skip = int(speedup)
         frame_indices = list(range(0, max_frames, max(1, frame_skip)))
 
@@ -305,6 +327,9 @@ class Visualizer:
         (odom_line,) = ax.plot(
             [], [], "-", color="red", linewidth=2, label="Dead Reckoning", alpha=0.8
         )
+        (kf_line,) = ax.plot(
+            [], [], "-", color="blue", linewidth=2, label="KF Prediction", alpha=0.8
+        ) if kf_poses is not None else (None,)
         lm_scatter = ax.scatter(
             [],
             [],
@@ -318,6 +343,7 @@ class Visualizer:
 
         gt_end = ax.plot([], [], "s", color="green", markersize=10, alpha=0)[0]
         odom_end = ax.plot([], [], "s", color="red", markersize=10, alpha=0)[0]
+        kf_end = ax.plot([], [], "s", color="blue", markersize=10, alpha=0)[0] if kf_poses is not None else None
 
         time_text = ax.text(
             0.02,
@@ -334,11 +360,20 @@ class Visualizer:
         def init():
             gt_line.set_data([], [])
             odom_line.set_data([], [])
+            if kf_line is not None:
+                kf_line.set_data([], [])
             lm_scatter.set_offsets(np.empty((0, 2)))
             gt_end.set_data([], [])
             odom_end.set_data([], [])
+            if kf_end is not None:
+                kf_end.set_data([], [])
             time_text.set_text("")
-            return gt_line, odom_line, lm_scatter, gt_end, odom_end, time_text
+            artists = [gt_line, odom_line, lm_scatter, gt_end, odom_end, time_text]
+            if kf_line is not None:
+                artists.insert(2, kf_line)
+            if kf_end is not None:
+                artists.insert(-1, kf_end)
+            return tuple(artists)
 
         def animate(frame_idx):
             actual_frame = (
@@ -368,13 +403,28 @@ class Visualizer:
                     )
                     odom_end.set_alpha(0.8)
 
+            if kf_poses is not None and actual_frame < len(kf_poses):
+                kf_data = kf_poses.iloc[: actual_frame + 1]
+                kf_line.set_data(kf_data["x"], kf_data["y"])
+
+                if is_final_frame:
+                    kf_end.set_data(
+                        [kf_data.iloc[-1]["x"]], [kf_data.iloc[-1]["y"]]
+                    )
+                    kf_end.set_alpha(0.8)
+
             if actual_frame < len(gt_poses) and not obs_lm.empty:
                 current_time = gt_poses.iloc[actual_frame]["Time"]
                 obs_up_to_now = obs_lm[obs_lm["time"] <= current_time]
                 if len(obs_up_to_now) > 0:
                     lm_scatter.set_offsets(obs_up_to_now[["obs_x", "obs_y"]].values)
 
-            return gt_line, odom_line, lm_scatter, gt_end, odom_end, time_text
+            artists = [gt_line, odom_line, lm_scatter, gt_end, odom_end, time_text]
+            if kf_line is not None:
+                artists.insert(2, kf_line)
+            if kf_end is not None:
+                artists.insert(-1, kf_end)
+            return tuple(artists)
 
         anim = FuncAnimation(
             fig,
