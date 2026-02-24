@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+import numpy as np
 import pandas as pd
 
 from environment import Environment
@@ -60,13 +61,13 @@ def run_scenario(scenario_name):
     if LINEAR:
         kf = KalmanFilter(
             dt,
-            initial_robot_pose,
+            np.array([initial_robot_pose.pos.x, initial_robot_pose.pos.y, initial_robot_pose.theta]),
         )
     else:
         # set up the Extended Kalman Filter
         kf = ExtendedKalmanFilter(
             dt,
-            initial_robot_pose,
+            np.array([initial_robot_pose.pos.x, initial_robot_pose.pos.y, initial_robot_pose.theta]),
         )
 
     # Attach sensors
