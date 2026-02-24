@@ -96,4 +96,7 @@ class Robot:
                     for br in reading:
                         row[f"lm_{int(br.landmark_id)}_bearing"] = br.bearing
                         row[f"lm_{int(br.landmark_id)}_range"] = br.range
+                elif sensor.name == "gps": 
+                    row["gps_x"] = reading[0]
+                    row["gps_y"] = reading[1]
         return pd.DataFrame([row])

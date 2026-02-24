@@ -11,6 +11,9 @@ import pandas as pd
 
 from environment import Environment
 from robot import Robot
+from sensors import WheelEncoder, LandmarkPinger, GPS
+from extended_kalman_filter import ExtendedKalmanFilter
+from kalman_filter import KalmanFilter
 from utils import Position, Pose, Landmark, Bounds
 
 
@@ -69,8 +72,10 @@ def run_scenario(scenario_name):
     # Attach sensors
     encoder = WheelEncoder(robot)
     pinger = LandmarkPinger(robot)
+    gps = GPS(robot, name="gps", interval=1.0, x_noise=0.5, y_noise=0.5)
     robot.sensors.append(encoder)
     robot.sensors.append(pinger)
+    robot.sensors.append(gps)
 
     # Load velocity commands
     vel_commands = []
