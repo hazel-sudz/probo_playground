@@ -11,7 +11,6 @@ import pandas as pd
 
 from environment import Environment
 from robot import Robot
-from sensors import WheelEncoder, LandmarkPinger
 from utils import Position, Pose, Landmark, Bounds
 
 
@@ -53,6 +52,20 @@ def run_scenario(scenario_name):
     env = Environment(dimensions, dt, obstacles, landmarks, initial_robot_pose)
     robot = Robot(env)
 
+    # set up the (Extended) Kalman Filter
+    LINEAR = True
+    if LINEAR:
+        kf = KalmanFilter(
+            dt,
+            initial_robot_pose,
+        )
+    else:
+        # set up the Extended Kalman Filter
+        kf = ExtendedKalmanFilter(
+            dt,
+            initial_robot_pose,
+        )
+
     # Attach sensors
     encoder = WheelEncoder(robot)
     pinger = LandmarkPinger(robot)
@@ -74,43 +87,28 @@ def run_scenario(scenario_name):
     total_timesteps = int(total_seconds / env.DT)
     ground_truth_history = []
     sensor_data_history = []
+    kalman_filter_history = []
 
-    cmd_index = 0
-    current_lin_vel = 0.0
-    current_ang_vel = 0.0
+    # set up input filepath and output filepaths
+    input_commands_filepath = ""
+    output_ground_truth_filepath = ""
+    output_sensor_data_filepath = ""
 
-    for step in range(total_timesteps + 1):
-        # Snapshot ground truth
-        ground_truth_history.append(env.take_state_snapshot())
+    # open up the instructions, pop the first
+    with open(input_commands_filepath, "r") as cmd:
+        # iterate through each timestep
+        for step in range(int(total_timesteps) + 1):
+            # TODO: take a ground truth snapshot and add it to the history
 
-        # Take sensor measurements
-        sensor_data_history.append(robot.take_sensor_measurements())
+            # TODO: take sensor measurements and add it to the history
 
-        # Check if a new command should be applied at this timestamp
-        while cmd_index < len(vel_commands) and vel_commands[cmd_index]["timestamp"] <= env.time:
-            current_lin_vel = vel_commands[cmd_index]["linear_vel"]
-            current_ang_vel = vel_commands[cmd_index]["angular_vel"]
-            cmd_index += 1
+            # TODO: retrieve the next motor command from the input file
 
-        # Execute motor command
-        robot.robot_step_differential(current_lin_vel, current_ang_vel)
+            # TODO: execute the motor command
 
-        # Advance time
-        env.time += env.DT
+    # at the end, write the histories into output files
+    with open(output_ground_truth_filepath, "w") as gt_data:
+        # TODO: write ground_truth_history to a file
 
-    ground_truth_df = pd.concat(ground_truth_history, ignore_index=True)
-    sensor_data_df = pd.concat(sensor_data_history, ignore_index=True)
-
-    return ground_truth_df, sensor_data_df
-
-
-if __name__ == "__main__":
-    scenario = sys.argv[1]
-    gt_df, sensor_df = run_scenario(scenario)
-
-    output_dir = os.path.join(os.path.dirname(__file__), "..", "output", scenario)
-    os.makedirs(output_dir, exist_ok=True)
-
-    gt_df.to_csv(os.path.join(output_dir, "ground_truth.csv"), index=False)
-    sensor_df.to_csv(os.path.join(output_dir, "sensor_data.csv"), index=False)
-    print(f"Saved outputs to {output_dir}")
+    with open(output_sensor_data_filepath, "w") as sensor_data:
+        # TODO: write sensor_data_history to a file
