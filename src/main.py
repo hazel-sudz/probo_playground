@@ -117,20 +117,22 @@ def run_scenario(scenario_name):
 
             if pd.notna(enc_x) and pd.notna(enc_y) and pd.notna(enc_w):
                 x, p = kf.predict(np.array([enc_x, enc_y, enc_w]))
-            else:
-                x, p = kf.predict(np.array([0.0, 0.0, 0.0]))
 
-            kalman_filter_history.append({
-                "t": env.time,
-                "kf_x": float(x[0]),
-                "kf_y": float(x[1]),
-                "kf_theta": float(x[2]),
-                "p_xx": float(p[0, 0]),
-                "p_yy": float(p[1, 1]),
-                "p_tt": float(p[2, 2]),
-            })
-            # TODO: call the Kalman Filter update step if new sensor data is available
-            pass
+            # call the Kalman Filter update step if new sensor data is available
+            sensor_data: pd.DataFrame = sensor_data_history[-1]
+            if "gps_x" in sensor_data.columns:
+                z = np.array([sensor_data["gps_x"].iloc[0], sensor_data["gps_y"].iloc[0]])
+                x, p = kf.update(z, gps.H, gps.R)
+
+                kalman_filter_history.append({
+                    "t": env.time,
+                    "kf_x": float(x[0]),
+                    "kf_y": float(x[1]),
+                    "kf_theta": float(x[2]),
+                    "p_xx": float(p[0, 0]),
+                    "p_yy": float(p[1, 1]),
+                    "p_tt": float(p[2, 2]),
+                })
         else:
             # TODO: call the Extended Kalman Filter prediction step
 

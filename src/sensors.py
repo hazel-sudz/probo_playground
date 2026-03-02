@@ -334,7 +334,7 @@ class GPS(SensorInterface):
         # Hx = [[1, 0, 0], [0, 1, 0]] @ [x, y, theta]^T = [x,y] 
         self.H = np.array([[1, 0, 0], [0, 1, 0]])
 
-        # TODO: fill in the noise model
+        # fill in the noise model
         self.R = np.array([[self.X_NOISE**2, 0], [0, self.Y_NOISE**2]])
 
     def sample(self):
