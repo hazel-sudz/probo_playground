@@ -20,6 +20,7 @@ Temporary Items
 # IDE
 .vscode/
 
-# Python
+# Python / uv
+.venv/
 .pytest_cache/
 **/__pycache__/
