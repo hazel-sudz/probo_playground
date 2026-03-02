@@ -21,7 +21,7 @@ class KalmanFilter:
     Attributes:
         dt: the length of each timestep, in seconds
         x: the state vector for the system we are estimating
-        P: the process model, describing the uncertainty in our estimate
+        P: the estimate covariance, describing the uncertainty in our estimate
         F: the state transition matrix, describing how our state naturally changes from timestep to timestep
         B: the control input model, describing how control inputs affect each state variable in the state vector
         Q: the process noise, modeling unexpected disturbance in state transitions
@@ -88,20 +88,20 @@ class KalmanFilter:
             H: the measurement model, which relates the state space to the measurement space
             R: the measurement noise model (covariance)
         """
-        # TODO: calculate the total uncertainty in the system
-        S = None
+        # calculate the total uncertainty in the system
+        S = self.H @ self.P @ self.H.T + self.R
 
-        # TODO: calculate the Kalman Gain, AKA the percentage of the total uncertainty that came from the estimate rather than the measurement
-        K = None
+        # calculate the Kalman Gain, AKA the percentage of the total uncertainty that came from the estimate rather than the measurement
+        K = self.P @ self.H.T @ np.linalg.inv(self.S)
 
-        # TODO: calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
-        y = None
+        # calculate the residual, AKA the error between the observation and what we expected the observation to be given our estimated state vector
+        y = self.z - self.H @ self.x
 
-        # TODO: update the state vector
-        self.x = None
+        # update the state vector
+        self.x = self.x + K @ y
 
-        # TODO: update the process model
-        self.P = None
+        # update the process model
+        self.P = self.P - K @ self.H @ self.P
 
         return self.x, self.P
 
