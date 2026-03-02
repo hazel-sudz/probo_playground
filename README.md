@@ -1,7 +1,7 @@
 # Probabilistic Robotics Playground: Linear and Extended Kalman Filtering
-> **Developed by [your name here!]**
+> **Developed by Hazel Sudzilouski**
 > 
-> **Contributors:** [anyone you worked with!]
+> **Contributors:** NA
 
 ## Repository Overview and Vision
 This repository is meant to be a starting point for creativity and self-guided learning for the _Probabilistic Robotics_ course at Olin College of Engineering, providing an initial skeleton for a mobile robot simulation environment. The assignment associated with this branch provides extra support for implementing a linear Kalman Filter in the simulator.
